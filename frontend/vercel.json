@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npm install --legacy-peer-deps && npx react-scripts build",
-  "outputDirectory": "build",
-  "installCommand": "npm install --legacy-peer-deps"
-}
