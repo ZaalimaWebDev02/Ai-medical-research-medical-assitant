@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://curalink-api-a2b8.onrender.com';
+
 const EXAMPLE_QUERIES = [
   { icon: '🧠', text: 'Latest DBS treatments for Parkinson\'s disease', disease: 'Parkinson\'s disease', query: 'Deep Brain Stimulation' },
   { icon: '🫁', text: 'Immunotherapy clinical trials for lung cancer', disease: 'lung cancer', query: 'immunotherapy checkpoint inhibitors' },
@@ -38,9 +40,7 @@ function Message({ message }) {
       <div className="message user">
         <div className="message-avatar">👤</div>
         <div className="message-content">
-          <div className="message-bubble">
-            {message.content}
-          </div>
+          <div className="message-bubble">{message.content}</div>
           <div className="user-query-pills">
             {message.disease && <span className="query-pill">🦠 {message.disease}</span>}
             {message.patientName && <span className="query-pill">👤 {message.patientName}</span>}
@@ -52,7 +52,7 @@ function Message({ message }) {
       </div>
     );
   }
-  
+
   return (
     <div className="message assistant">
       <div className="message-avatar">🔬</div>
@@ -63,7 +63,7 @@ function Message({ message }) {
           ) : (
             <div dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           )}
-          
+
           {message.stats && (
             <div style={{
               marginTop: 16,
@@ -130,7 +130,7 @@ function WelcomeScreen({ onExampleClick }) {
         Welcome to <span>Curalink</span>
       </h1>
       <p className="welcome-subtitle">
-        AI-powered medical research assistant. Search PubMed, OpenAlex, and ClinicalTrials.gov 
+        AI-powered medical research assistant. Search PubMed, OpenAlex, and ClinicalTrials.gov
         simultaneously with intelligent ranking and LLM-powered analysis.
       </p>
       <div className="example-queries">
@@ -154,9 +154,9 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
   const [disease, setDisease] = useState('');
   const [patientName, setPatientName] = useState('');
   const [location, setLocation] = useState('');
-  const [inputMode, setInputMode] = useState('natural'); // 'natural' | 'structured'
+  const [inputMode, setInputMode] = useState('natural');
   const [loadingStage, setLoadingStage] = useState(0);
-  
+
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -164,31 +164,23 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Cycle through loading stages
   useEffect(() => {
     if (!isLoading) { setLoadingStage(0); return; }
-    
     const interval = setInterval(() => {
-      setLoadingStage(prev => {
-        if (prev < LOADING_STAGES.length - 1) return prev + 1;
-        return prev;
-      });
+      setLoadingStage(prev => prev < LOADING_STAGES.length - 1 ? prev + 1 : prev);
     }, 2500);
-    
     return () => clearInterval(interval);
   }, [isLoading]);
 
   const handleSubmit = () => {
     const q = query.trim();
     if (!q && !disease.trim()) return;
-    
     onSendQuery({
       query: q || disease,
       disease: inputMode === 'structured' ? disease : '',
       patientName: inputMode === 'structured' ? patientName : '',
       location: inputMode === 'structured' ? location : ''
     });
-    
     setQuery('');
     if (inputMode === 'structured') {
       setDisease('');
@@ -211,7 +203,6 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
     setTimeout(() => handleSubmit(), 100);
   };
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -234,7 +225,7 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
           </>
         )}
       </div>
-      
+
       <div className="input-area">
         <div className="input-form-toggle">
           <button
@@ -250,7 +241,7 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
             🔧 Structured Input
           </button>
         </div>
-        
+
         {inputMode === 'structured' && (
           <div className="structured-form">
             <div className="form-field">
@@ -282,7 +273,7 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
             </div>
           </div>
         )}
-        
+
         <div className="query-input-row">
           <textarea
             ref={textareaRef}
@@ -293,7 +284,7 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
             placeholder={
               inputMode === 'structured'
                 ? 'Enter treatment or intervention (e.g. Deep Brain Stimulation)...'
-                : 'Ask about any disease, treatment, or clinical trial... (e.g. "Latest immunotherapy for lung cancer")'
+                : 'Ask about any disease, treatment, or clinical trial...'
             }
             disabled={isLoading}
             rows={1}
@@ -307,12 +298,12 @@ export default function ChatInterface({ messages, isLoading, onSendQuery, contex
             {isLoading ? '⏳' : '🚀'}
           </button>
         </div>
-        
+
         <div className="input-footer">
           <span className="input-hint">
             {context?.disease ? `Context: ${context.disease} | ` : ''}
             Searching PubMed + OpenAlex + ClinicalTrials.gov
-            {systemStatus?.ollama?.available ? ' + Ollama LLM' : ' (Ollama offline - template mode)'}
+            {systemStatus?.ollama?.available ? ' + Ollama LLM' : ' (template mode)'}
           </span>
           {messages.length > 0 && (
             <button className="clear-btn" onClick={onClearChat}>
